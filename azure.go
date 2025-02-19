@@ -79,6 +79,32 @@ func (c *azureClient) execute(sessionID string, code string) (string, error) {
 	// }
 }
 
+func (c *azureClient) listFiles(sessionID string) (string, error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/files?api-version=%s&identifier=%s", c.baseURL, apiVersion, sessionID), nil)
+	if err != nil {
+		return "", fmt.Errorf("failed create request: %w", err)
+	}
+	c.authRequest(req)
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+	fr := &filesResponse{}
+	err = json.NewDecoder(resp.Body).Decode(fr)
+	if err != nil {
+		return "", fmt.Errorf("failed to decode response: %w", err)
+	}
+	fs := make([]string, 0, len(fr.Value))
+	for _, v := range fr.Value {
+		fs = append(fs, v.Properties.FileName)
+	}
+	fsr := strings.Join(fs, "\n")
+	log.Printf("Files in session %s:\n%s\n", sessionID, fsr)
+	return fsr, nil
+}
+
 type requestProperties struct {
 	CodeInputType string `json:"codeInputType"`
 	ExecutionType string `json:"executionType"`

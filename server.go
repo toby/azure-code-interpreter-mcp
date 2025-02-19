@@ -51,6 +51,14 @@ func NewServer(cfg config) *Server {
 	)
 	s.mcpServer.AddTool(execTool, s.execHandler)
 
+	listFilesTool := mcp.NewTool("list_files",
+		mcp.WithDescription("List files in the session"),
+		mcp.WithString("session_id",
+			mcp.Description("Optional: Session ID to execute code in"),
+		),
+	)
+	s.mcpServer.AddTool(listFilesTool, s.listFilesHandler)
+
 	return s
 }
 
@@ -62,9 +70,6 @@ func (s *Server) newSessionHandler(ctx context.Context, request mcp.CallToolRequ
 func (s *Server) execHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	sessionID, ok := request.Params.Arguments["session_id"].(string)
 	if !ok {
-		if s.sessionID == "" {
-			s.sessionID = xid.New().String()
-		}
 		sessionID = s.sessionID
 	}
 	code := request.Params.Arguments["code"].(string)
@@ -80,7 +85,20 @@ func (s *Server) execHandler(ctx context.Context, request mcp.CallToolRequest) (
 	return mcp.NewToolResultText(resp), nil
 }
 
+func (s *Server) listFilesHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	sessionID, ok := request.Params.Arguments["session_id"].(string)
+	if !ok {
+		sessionID = s.sessionID
+	}
+	resp, err := s.azClient.listFiles(sessionID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list files: %w", err)
+	}
+	return mcp.NewToolResultText(resp), nil
+}
+
 // Start starts the server.
 func (s *Server) Start() error {
+	s.sessionID = xid.New().String()
 	return server.ServeStdio(s.mcpServer)
 }
