@@ -7,11 +7,12 @@ import (
 )
 
 type config struct {
-	SubscriptionID string `env:"AZURE_SUBSCRIPTION_ID,required"`
-	ResourceGroup  string `env:"AZURE_RESOURCE_GROUP,required"`
-	SessionPool    string `env:"AZURE_SESSION_POOL,required"`
-	Region         string `env:"AZURE_REGION,required"`
-	baseURL        string
+	SubscriptionID    string `env:"AZURE_SUBSCRIPTION_ID,required"`
+	ResourceGroup     string `env:"AZURE_RESOURCE_GROUP,required"`
+	SessionPool       string `env:"AZURE_SESSION_POOL,required"`
+	Region            string `env:"AZURE_REGION,required"`
+	DownloadDirectory string `env:"AZURE_DOWNLOAD_DIRECTORY" envDefault:"./downloads"`
+	baseURL           string
 }
 
 func main() {

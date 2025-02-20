@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -16,6 +18,7 @@ type Server struct {
 	mcpServer *server.MCPServer
 	sessionID string
 	azClient  *azureClient
+	config    config
 }
 
 // NewServer creates a new Server.
@@ -32,6 +35,7 @@ func NewServer(cfg config) *Server {
 	s := &Server{
 		mcpServer: ms,
 		azClient:  ac,
+		config:    cfg,
 	}
 
 	sessionTool := mcp.NewTool("new_session",
@@ -54,10 +58,22 @@ func NewServer(cfg config) *Server {
 	listFilesTool := mcp.NewTool("list_files",
 		mcp.WithDescription("List files in the session"),
 		mcp.WithString("session_id",
-			mcp.Description("Optional: Session ID to execute code in"),
+			mcp.Description("Optional: Session ID to list files in"),
 		),
 	)
 	s.mcpServer.AddTool(listFilesTool, s.listFilesHandler)
+
+	downloadFileTool := mcp.NewTool("download_file",
+		mcp.WithDescription("Download a file from the session to the local computer"),
+		mcp.WithString("session_id",
+			mcp.Description("Optional: Session ID to download file from"),
+		),
+		mcp.WithString("file_path",
+			mcp.Required(),
+			mcp.Description("Path of file to download from the session"),
+		),
+	)
+	s.mcpServer.AddTool(downloadFileTool, s.downloadFileHandler)
 
 	return s
 }
@@ -95,6 +111,24 @@ func (s *Server) listFilesHandler(ctx context.Context, request mcp.CallToolReque
 		return nil, fmt.Errorf("failed to list files: %w", err)
 	}
 	return mcp.NewToolResultText(resp), nil
+}
+
+func (s *Server) downloadFileHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	sessionID, ok := request.Params.Arguments["session_id"].(string)
+	if !ok {
+		sessionID = s.sessionID
+	}
+	fileName, _ := request.Params.Arguments["file_name"].(string)
+	b, err := s.azClient.getFile(sessionID, fileName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get file %s: %w", fileName, err)
+	}
+	filePath := filepath.Join(s.config.DownloadDirectory, fileName)
+	os.WriteFile(filePath, b, 0644)
+	rc := mcp.ResourceContents{
+		URI: "file://" + filePath,
+	}
+	return mcp.NewToolResultResource(fileName, rc), nil
 }
 
 // Start starts the server.
