@@ -72,7 +72,7 @@ func (c *azureClient) execute(sessionID string, code string) (string, error) {
 		io.Copy(w, strings.NewReader(exr.Properties.Stdout))
 		return w.String(), nil
 	}
-	return "", fmt.Errorf("failed to set stdout: %s", exr.Properties.Stderr)
+	return "", nil
 	// if exr.Properties.Stderr != "" {
 	// 	fmt.Printf("/code/execute equest stderr:\n\n%s\n", exr.Properties.Stderr)
 	// 	io.Copy(w, strings.NewReader(exr.Properties.Stderr))
@@ -119,7 +119,7 @@ func (c *azureClient) getFile(sessionID string, fileName string) ([]byte, error)
 	defer resp.Body.Close()
 	log.Printf("Get file %s in session %s:", fileName, sessionID)
 	fc := bytes.NewBuffer([]byte{})
-	io.Copy(fc, resp.Body)
+	fc.ReadFrom(resp.Body)
 	return fc.Bytes(), nil
 }
 

@@ -40,11 +40,14 @@ func NewServer(cfg config) *Server {
 
 	sessionTool := mcp.NewTool("new_session",
 		mcp.WithDescription("Create a new session, any generated files are stored in the session"),
+		mcp.WithString("reason",
+			mcp.Description("Optional: reason the session was created"),
+		),
 	)
 	s.mcpServer.AddTool(sessionTool, s.newSessionHandler)
 
 	execTool := mcp.NewTool("exec",
-		mcp.WithDescription("Execute Python code in a session"),
+		mcp.WithDescription("Execute Python code in a session. Store all files generated in the `/mnt/data/` directory"),
 		mcp.WithString("code",
 			mcp.Required(),
 			mcp.Description("Python code to execute in the session"),
@@ -68,7 +71,7 @@ func NewServer(cfg config) *Server {
 		mcp.WithString("session_id",
 			mcp.Description("Optional: Session ID to download file from"),
 		),
-		mcp.WithString("file_path",
+		mcp.WithString("file_name",
 			mcp.Required(),
 			mcp.Description("Path of file to download from the session"),
 		),
@@ -123,10 +126,20 @@ func (s *Server) downloadFileHandler(ctx context.Context, request mcp.CallToolRe
 	if err != nil {
 		return nil, fmt.Errorf("failed to get file %s: %w", fileName, err)
 	}
-	filePath := filepath.Join(s.config.DownloadDirectory, fileName)
-	os.WriteFile(filePath, b, 0644)
+	dir := s.config.DownloadDirectory
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err := os.MkdirAll(dir, 0755)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create directory: %w", err)
+		}
+	}
+	fp := filepath.Join(dir, fileName)
+	err = os.WriteFile(fp, b, 0644)
+	if err != nil {
+		return nil, fmt.Errorf("failed to write file: %w", err)
+	}
 	rc := mcp.ResourceContents{
-		URI: "file://" + filePath,
+		URI: "file://" + fp,
 	}
 	return mcp.NewToolResultResource(fileName, rc), nil
 }
