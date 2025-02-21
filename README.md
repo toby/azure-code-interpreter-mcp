@@ -10,7 +10,7 @@ You need to build the `azure-code-interpreter-mcp` binary with `go` and install 
 
 ## Usage
 
-Once you have created the requred Azure resources and authenticated with `az`, you need to set the following environment variables in you LLM tool:
+Once you have created the requred Azure resources and authenticated with `az`, you need to set the following environment variables in your LLM tool:
 
 - `AZURE_SUBSCRIPTION_ID`: The ID of the Azure subscription that contains the resource group.
 - `AZURE_RESOURCE_GROUP`: The name of the resource group that contains the session pool.
