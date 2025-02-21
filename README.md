@@ -4,7 +4,7 @@ This [MCP](https://modelcontextprotocol.io/introduction) server gives LLMs the a
 
 ## Setup
 
-The server uses the [az]() Azure CLI client for authentication, so make sure that is installed and authenticated. You'll need to setup a resource group and session pool according to [these instructions](https://learn.microsoft.com/en-us/azure/container-apps/sessions-code-interpreter#code-interpreter-session-pool). Be sure to set the `--network-status EgressEnabled` flag when creating the session pool if you want generated code to access the internet.
+The server uses the [az](https://github.com/Azure/azure-cli) Azure CLI client for authentication, so make sure that is installed and authenticated. You'll need to setup a resource group and session pool according to [these instructions](https://learn.microsoft.com/en-us/azure/container-apps/sessions-code-interpreter#code-interpreter-session-pool). Be sure to set the `--network-status EgressEnabled` flag when creating the session pool if you want generated code to access the internet.
 
 You need to build the `azure-code-interpreter-mcp` binary with `go` and install it in your `$PATH` or reference it directly in your LLM tool.
 
