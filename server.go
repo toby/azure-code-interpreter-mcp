@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"os"
@@ -101,6 +102,9 @@ func (s *Server) execHandler(ctx context.Context, request mcp.CallToolRequest) (
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute code: %w", err)
 	}
+	if resp == "" {
+		return mcp.NewToolResultText("No output"), nil
+	}
 	return mcp.NewToolResultText(resp), nil
 }
 
@@ -138,8 +142,9 @@ func (s *Server) downloadFileHandler(ctx context.Context, request mcp.CallToolRe
 	if err != nil {
 		return nil, fmt.Errorf("failed to write file: %w", err)
 	}
-	rc := mcp.ResourceContents{
-		URI: "file://" + fp,
+	rc := mcp.BlobResourceContents{
+		URI:  "file://" + fp,
+		Blob: base64.StdEncoding.EncodeToString(b),
 	}
 	return mcp.NewToolResultResource(fileName, rc), nil
 }

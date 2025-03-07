@@ -6,7 +6,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.17.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.8.2
 	github.com/caarlos0/env/v11 v11.3.1
-	github.com/mark3labs/mcp-go v0.8.4
+	github.com/mark3labs/mcp-go v0.11.2
 	github.com/rs/xid v1.6.0
 )
 
